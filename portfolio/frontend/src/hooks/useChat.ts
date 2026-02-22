@@ -26,7 +26,8 @@ export function useChat() {
     {
       id: '0',
       role: 'assistant',
-      content: "Hi! I'm Alex's AI assistant — ask me anything about his background, projects, or skills. I'm powered by real resume data.",
+      content:
+        "Hi! I'm Alex's AI assistant — ask me anything about his background, projects, or skills.",
       timestamp: new Date(),
     }
   ]);
@@ -49,7 +50,7 @@ export function useChat() {
     setError(null);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('http://127.0.0.1:8000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -64,22 +65,28 @@ export function useChat() {
       }
 
       const data = await res.json();
+
       const assistantMsg: Message = {
         id: uuidv4(),
         role: 'assistant',
         content: data.response,
         timestamp: new Date(),
       };
+
       setMessages(prev => [...prev, assistantMsg]);
+
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong';
       setError(msg);
-      setMessages(prev => [...prev, {
-        id: uuidv4(),
-        role: 'assistant',
-        content: `⚠️ ${msg}. Please check the API configuration.`,
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: uuidv4(),
+          role: 'assistant',
+          content: `⚠️ ${msg}`,
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -88,14 +95,23 @@ export function useChat() {
   const clearChat = useCallback(() => {
     sessionId.current = uuidv4();
     localStorage.setItem(SESSION_KEY, sessionId.current);
-    setMessages([{
-      id: '0',
-      role: 'assistant',
-      content: "Fresh start! Ask me anything about Alex.",
-      timestamp: new Date(),
-    }]);
+    setMessages([
+      {
+        id: '0',
+        role: 'assistant',
+        content: "Fresh start! Ask me anything about Alex.",
+        timestamp: new Date(),
+      },
+    ]);
     setError(null);
   }, []);
 
-  return { messages, loading, error, sendMessage, clearChat, suggestedQuestions: SUGGESTED_QUESTIONS };
+  return {
+    messages,
+    loading,
+    error,
+    sendMessage,
+    clearChat,
+    suggestedQuestions: SUGGESTED_QUESTIONS,
+  };
 }
